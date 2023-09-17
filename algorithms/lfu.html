@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>LFU Page Replacement Algorithm</title>
+  <link rel="stylesheet" href="lfu-style.css">
+</head>
+<body>
+  <ul>
+    <li><a href="lru.html"><img src="back-arrow.png"></a></li>
+    <li><a href="/index.html"><img src="home.png"></a></li>
+    <li><a href="fifo.html"><img src="next.png"></a></li>
+  </ul>
+
+  <h1><u>LFU Page Replacement Algorithm</u></h1>
+  <p id="p1">Number of Frames <input type="number" id="frameCount" value="3" required min="3" max="4"></p>
+  <p id="p2">Reference String <input type="text" id="refString" value="7,0,1,2,0,3,0,4,2,3,0,3,2,1,2"></p>
+
+  <center><button onclick="simulateLFU()">Submit</button>
+
+  <div id="memory-container">
+    <!-- Memory cells will be added here dynamically -->
+  </div>
+
+  <div id="pageFaultDisplay"></div>
+  
+  </center>
+
+  <script>
+    function clearMemoryContainer() {
+      const memoryContainer = document.getElementById("memory-container");
+      memoryContainer.innerHTML = ""; // Clear the existing memory container content
+    }
+
+    function simulateLFU() {
+      clearMemoryContainer(); // Clear the existing memory container before running the simulation
+
+      const frameCount = parseInt(document.getElementById("frameCount").value);
+      const refString = document.getElementById("refString").value
+        .split(",")
+        .map(Number);
+
+      let frames = Array(frameCount).fill(null);
+      const memoryContainer = document.getElementById("memory-container");
+      const pageFaultDisplay = document.getElementById("pageFaultDisplay");
+
+      const addToMemoryContainer = () => {
+        const memoryCell = document.createElement("div");
+        memoryCell.classList.add("memory-cell");
+        frames.forEach((page) => {
+          const cellContent = document.createElement("div");
+          cellContent.textContent = page === null ? "-" : page;
+          memoryCell.appendChild(cellContent);
+        });
+        memoryContainer.appendChild(memoryCell);
+      };
+
+      let pageFaultCount = 0;
+      const pageFrequency = new Map(); // Map to store page frequencies
+
+      refString.forEach((page) => {
+        // Update page frequency
+        pageFrequency.set(page, (pageFrequency.get(page) || 0) + 1);
+
+        if (!frames.includes(page)) {
+          // Page fault occurred
+          pageFaultCount++;
+
+          if (frames.includes(null)) {
+            // If there is an empty frame, add the page to it
+            const emptyFrameIndex = frames.indexOf(null);
+            frames[emptyFrameIndex] = page;
+          } else {
+            // If no empty frame, find the page with the least frequency and replace it
+            let leastFrequentPage = frames[0];
+            let leastFrequency = pageFrequency.get(frames[0]);
+            frames.forEach((frame) => {
+              const frequency = pageFrequency.get(frame);
+              if (frequency < leastFrequency) {
+                leastFrequentPage = frame;
+                leastFrequency = frequency;
+              }
+            });
+            const lfuIndex = frames.indexOf(leastFrequentPage);
+            frames[lfuIndex] = page;
+          }
+        }
+
+        addToMemoryContainer();
+      });
+
+      pageFaultDisplay.textContent = `LFU Page Fault Count: ${pageFaultCount}`;
+    }
+  </script>
+</body>
+</html>
